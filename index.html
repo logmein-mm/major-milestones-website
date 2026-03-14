@@ -84,13 +84,7 @@
             overflow: hidden;
             padding: 6rem 2rem 4rem;
         }
-        .hero-parallax-bg {
-            position: absolute;
-            inset: -25% 0;
-            background: url('images/hero-bg.jpg') center / cover no-repeat;
-            will-change: transform;
-            z-index: 0;
-        }
+        .hero-parallax-bg { display: none; }
         .hero::before {
             content: '';
             position: absolute;
@@ -1399,21 +1393,6 @@
     stats.forEach(s => { if (s.el) io.observe(s.el); });
 })();
 
-/* ── 3. PARALLAX HERO ───────────────────────────────────────────── */
-(function(){
-    const bg = document.getElementById('heroBg');
-    if (!bg) return;
-    let ticking = false;
-    window.addEventListener('scroll', function() {
-        if (!ticking) {
-            requestAnimationFrame(function() {
-                bg.style.transform = 'translateY(' + (window.scrollY * 0.35) + 'px)';
-                ticking = false;
-            });
-            ticking = true;
-        }
-    }, { passive: true });
-})();
 </script>
 
 </body>
