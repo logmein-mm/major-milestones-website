@@ -79,10 +79,17 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            background: linear-gradient(160deg, rgba(42,51,18,0.90) 0%, rgba(61,74,26,0.88) 100%), url('images/hero-bg.jpg') center / cover no-repeat;
+            background: linear-gradient(160deg, rgba(42,51,18,0.90) 0%, rgba(61,74,26,0.88) 100%);
             position: relative;
             overflow: hidden;
             padding: 6rem 2rem 4rem;
+        }
+        .hero-parallax-bg {
+            position: absolute;
+            inset: -25% 0;
+            background: url('images/hero-bg.jpg') center / cover no-repeat;
+            will-change: transform;
+            z-index: 0;
         }
         .hero::before {
             content: '';
@@ -798,6 +805,7 @@
 
 <!-- HERO -->
 <section class="hero">
+    <div class="hero-parallax-bg" id="heroBg"></div>
     <div class="hero-content">
         <p class="hero-label">Major Milestones B.V.</p>
         <h1>Driving Agile<br><span>Transformation</span></h1>
@@ -1389,6 +1397,22 @@
     }, { threshold: 0.5 });
 
     stats.forEach(s => { if (s.el) io.observe(s.el); });
+})();
+
+/* ── 3. PARALLAX HERO ───────────────────────────────────────────── */
+(function(){
+    const bg = document.getElementById('heroBg');
+    if (!bg) return;
+    let ticking = false;
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            requestAnimationFrame(function() {
+                bg.style.transform = 'translateY(' + (window.scrollY * 0.35) + 'px)';
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }, { passive: true });
 })();
 </script>
 
