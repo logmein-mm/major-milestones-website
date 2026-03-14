@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achter de Schermen van SAFe® Transformaties — Roel Peels</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-olive: #3D4A1A;
+            --lime: #BFCF3A;
+            --lime-light: #D4E05A;
+            --mid-olive: #5A6B2A;
+            --cream: #F5F3E8;
+            --dark-bg: #2A3312;
+            --subtext: #666;
+            --body: #333;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', Arial, sans-serif; background: var(--cream); color: var(--body); }
+
+        /* Progress bar */
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: var(--lime); width: 0%; z-index: 1000;
+            transition: width .1s;
+        }
+
+        /* Top nav */
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--dark-bg);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .8rem 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,.3);
+        }
+        .top-nav a.brand { color: var(--lime); font-size: .85rem; font-weight: 700; text-decoration: none; letter-spacing: .5px; }
+        .top-nav a.back { color: rgba(255,255,255,.6); font-size: .8rem; text-decoration: none; }
+        .top-nav a.back:hover { color: var(--lime); }
+
+        /* Layout */
+        .reader-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            max-width: 1100px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* Sidebar TOC */
+        .toc {
+            position: sticky; top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+            background: var(--dark-olive);
+            padding: 2rem 1.2rem;
+        }
+        .toc h5 {
+            color: var(--lime); font-size: .7rem; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            margin-bottom: 1.2rem;
+        }
+        .toc ul { list-style: none; }
+        .toc li { margin-bottom: .2rem; }
+        .toc a {
+            color: rgba(255,255,255,.65); font-size: .82rem;
+            text-decoration: none; display: block;
+            padding: .4rem .6rem; border-radius: 4px;
+            line-height: 1.4; transition: all .2s;
+        }
+        .toc a:hover, .toc a.active {
+            color: #fff; background: rgba(191,207,58,.15);
+            border-left: 2px solid var(--lime); padding-left: .4rem;
+        }
+        .toc .toc-section { color: rgba(255,255,255,.3); font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; margin: 1rem 0 .4rem .6rem; }
+
+        /* Content */
+        .reader-content { padding: 0; }
+
+        /* Cover */
+        .book-cover-page {
+            background: var(--dark-bg);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 4rem 3rem;
+            position: relative; overflow: hidden;
+        }
+        .book-cover-page::before {
+            content: ''; position: absolute;
+            left: 0; top: 0; bottom: 0; width: 8px;
+            background: linear-gradient(180deg, var(--lime), var(--dark-olive));
+        }
+        .book-cover-page::after {
+            content: ''; position: absolute;
+            top: -100px; right: -100px;
+            width: 400px; height: 400px; border-radius: 50%;
+            background: var(--lime); opacity: .04;
+        }
+        .cover-inner { max-width: 560px; position: relative; z-index: 1; }
+        .cover-label { color: var(--lime); font-size: .72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2rem; }
+        .cover-title { color: #fff; font-size: 2.6rem; font-weight: 700; line-height: 1.25; margin-bottom: 1rem; }
+        .cover-title span { color: var(--lime); }
+        .cover-sub { color: var(--lime-light); font-size: 1rem; line-height: 1.5; margin-bottom: 3rem; }
+        .cover-meta { border-top: 1px solid rgba(191,207,58,.25); padding-top: 1.5rem; }
+        .cover-author { color: #fff; font-size: 1rem; font-weight: 600; }
+        .cover-role { color: rgba(255,255,255,.55); font-size: .82rem; margin-top: .3rem; }
+        .cover-date { color: var(--lime); font-size: .75rem; margin-top: 1rem; font-weight: 600; letter-spacing: .5px; }
+
+        /* Chapter sections */
+        .book-chapter {
+            padding: 5rem 4rem;
+            border-bottom: 1px solid rgba(61,74,26,.12);
+        }
+        .book-chapter:nth-child(even) { background: #fff; }
+        .chapter-header { margin-bottom: 3rem; }
+        .chapter-num { color: var(--lime); font-size: .72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: .5rem; }
+        .chapter-title { color: var(--dark-olive); font-size: 1.9rem; font-weight: 700; line-height: 1.3; margin-bottom: .5rem; }
+        .chapter-sub { color: var(--subtext); font-size: .9rem; margin-bottom: 1rem; }
+        .chapter-accent { width: 48px; height: 3px; background: var(--lime); border-radius: 2px; }
+        .chapter-meta { color: var(--subtext); font-size: .78rem; margin-top: .8rem; }
+
+        /* Typography */
+        .book-chapter p { color: #444; font-size: .97rem; line-height: 1.8; margin-bottom: 1.1rem; max-width: 680px; }
+        .book-chapter h4 { color: var(--dark-olive); font-size: 1.05rem; font-weight: 700; margin: 2rem 0 .6rem; }
+        .book-chapter .bl { margin: 1rem 0 1.2rem 1.5rem; }
+        .book-chapter .bl li { color: #444; font-size: .93rem; line-height: 1.7; margin-bottom: .4rem; }
+        .book-chapter .bq {
+            border-left: 3px solid var(--lime);
+            padding: .8rem 1.4rem;
+            margin: 1.5rem 0;
+            background: rgba(191,207,58,.07);
+            border-radius: 0 6px 6px 0;
+            color: var(--dark-olive);
+            font-style: italic;
+            font-size: .95rem;
+            line-height: 1.7;
+            max-width: 620px;
+        }
+
+        /* Author card */
+        .author-card {
+            background: var(--dark-olive);
+            border-radius: 12px;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+            max-width: 680px;
+            margin-top: 2rem;
+        }
+        .author-photo {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            object-fit: cover; object-position: top;
+            border: 3px solid var(--lime);
+        }
+        .author-photo-placeholder {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: var(--mid-olive);
+            border: 3px solid var(--lime);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--lime); font-size: 1.5rem; font-weight: 700;
+        }
+        .author-name { color: #fff; font-size: 1rem; font-weight: 700; }
+        .author-role { color: var(--lime); font-size: .78rem; margin: .2rem 0 .8rem; }
+        .author-bio { color: rgba(255,255,255,.75); font-size: .85rem; line-height: 1.6; }
+
+        /* Nav between chapters */
+        .chapter-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2rem 4rem;
+            border-top: 1px solid rgba(61,74,26,.1);
+        }
+        .chapter-nav a {
+            color: var(--mid-olive); font-size: .85rem; text-decoration: none;
+            font-weight: 600; display: flex; align-items: center; gap: .4rem;
+        }
+        .chapter-nav a:hover { color: var(--dark-olive); }
+
+        /* More chapters teaser */
+        .more-chapters {
+            background: var(--dark-bg);
+            padding: 4rem;
+            text-align: center;
+        }
+        .more-chapters h3 { color: var(--lime); font-size: 1.2rem; margin-bottom: .8rem; }
+        .more-chapters p { color: rgba(255,255,255,.7); font-size: .9rem; max-width: 500px; margin: 0 auto 2rem; }
+        .btn-lime {
+            display: inline-block;
+            background: var(--lime); color: var(--dark-bg);
+            padding: .8rem 2rem; border-radius: 6px;
+            font-weight: 700; font-size: .9rem; text-decoration: none;
+        }
+        .btn-lime:hover { background: var(--lime-light); }
+
+        /* Responsive */
+        @media(max-width: 768px) {
+            .reader-layout { grid-template-columns: 1fr; }
+            .toc { display: none; }
+            .book-chapter { padding: 3rem 1.5rem; }
+            .cover-title { font-size: 1.8rem; }
+            .book-cover-page { padding: 3rem 1.5rem; }
+            .chapter-nav { padding: 1.5rem; }
+            .more-chapters { padding: 3rem 1.5rem; }
+            .author-card { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<nav class="top-nav">
+    <a href="index.html" class="back">← majormilestones.nl</a>
+    <a href="#cover" class="brand">Achter de Schermen van SAFe® Transformaties</a>
+    <a href="index.html#contact" class="back">Neem contact op</a>
+</nav>
+
+<div class="reader-layout">
+    <!-- Sidebar TOC -->
+    <aside class="toc">
+        <h5>Inhoudsopgave</h5>
+        <ul>
+            <li><a href="#cover">📘 Omslag</a></li>
+            <li><a href="#voorwoord">Voorwoord</a></li>
+            <li><a href="#auteur">Over de auteur</a></li>
+            <div class="toc-section">Deel I — Introductie</div>
+            <li><a href="#h01">1. Waarom SAFe?</a></li>
+            <li><a href="#h02">2. SAFe voor Dummies</a></li>
+            <li><a href="#h03">3. SAFe Ontleed</a></li>
+            <li><a href="#h04">4. Het DNA van SAFe®</a></li>
+            <li><a href="#h05">5. Het SAFe-jargon</a></li>
+            <div class="toc-section" style="margin-top:1.5rem;">Meer hoofdstukken</div>
+            <li><a href="#meer">📩 Vraag het boek aan</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="reader-content">
+
+        <!-- COVER -->
+        <section id="cover" class="book-cover-page">
+            <div class="cover-inner">
+                <div class="cover-label">Major Milestones B.V. &nbsp;·&nbsp; Eerste druk</div>
+                <h1 class="cover-title">Achter de Schermen van<br><span>SAFe® Transformaties</span></h1>
+                <p class="cover-sub">Praktijklessen uit twee jaar SAFe® transformaties — April 2024 t/m Maart 2026</p>
+                <div class="cover-meta">
+                    <div class="cover-author">ing. R.P. Peels</div>
+                    <div class="cover-role">Certified SAFe® Implementatie Consultant &amp; Authorised Trainer</div>
+                    <div class="cover-date">Maart 2026</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VOORWOORD -->
+        <section id="voorwoord" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Voorwoord</div>
+                <h2 class="chapter-title">Hoe dit boek ontstond</h2>
+                <div class="chapter-accent"></div>
+            </div>
+            <p>Voorwoord Dit boek is niet in één keer geschreven. Het is ontstaan zoals de beste inzichten altijd ontstaan — in de praktijk, stap voor stap, iteratie na iteratie. Wat je in handen houdt, is de verzameling van ruim zeventig artikelen, columns en reflecties die zijn geschreven in de periode van april 2024 tot en met begin 2026. Ze zijn geboren op de werkvloer van complexe organisaties, in vergaderzalen waar de grote vragen werden gesteld, en soms ook gewoon achter een laptop laat op de avond, wanneer een gedachte te goed was om niet op te schrijven. De rode draad? SAFe® — het Scaled Agile Framework. Maar dit boek gaat over veel meer dan een framework. Het gaat over mensen die moeten veranderen, over managers die hun rol opnieuw moeten uitvinden, over teams die leren samenwerken in een wereld die steeds sneller beweegt. Het gaat over de vragen die niemand hardop durft te stellen — en de antwoorden die we samen hebben gevonden. De artikelen zijn divers van toon en onderwerp. Soms analytisch en inhoudelijk, soms provocerend, soms bijna filosofisch. Van de vraag "wat is de oorsprong van SAFe?" tot "Waarom ik altijd een beetje bang ben voor pragmatische mensen." Van concrete handleidingen over het LACE Kanban board of de kosten van een Epic, tot brede beschouwingen over leiderschap, cultuur en de evolutie van Agile. En ja — ook de vraag of Agile überhaupt nog leeft. Niets van wat hier staat is vanuit een ivoren toren geschreven. Elk artikel heeft zijn wortels in echte vraagstukken, echte mensen en echte organisaties. Dat geeft de teksten hun ruwheid én hun waarde. Dit boek is bedoeld voor iedereen die midden in een SAFe®-transformatie staat — of er binnenkort mee te maken krijgt. Voor de lijnmanager die zich afvraagt wat dit voor hem of haar betekent. Voor het teamlid dat snapt dat er iets verandert maar nog niet precies weet wat. Voor de consultant die op zoek is naar scherpe inzichten die hij of zij niet in het officiële SAFe®-materiaal vindt. En voor de leider die wil begrijpen waarom verandering zo menselijk ingewikkeld is. Lees dit boek niet van voor naar achter. Blader erin. Zoek de titel die je aanspreekt. Laat je verrassen. En als een artikel je aan het denken zet, of je ergens mee oneens bent — dan heeft het zijn werk gedaan. Ik wil daarbij eerlijk zijn: ik weet ook niet alles. Sterker nog, ik ben me maar al te bewust van het Dunning-Kruger effect — je weet wel, dat vrolijke fenomeen waarbij je het meest zelfverzekerd bent op het moment dat je eigenlijk het minst weet. Ik doe mijn best om aan de juiste kant van die curve te zitten, maar garanties geef ik niet. Daarom sta ik open voor tips, adviezen en alternatieve denkrichtingen van jou. Stuur het naar safe@majormilestones.nl — en overigens mogen</p>
+<p>complimenten ook gewoon naar dat adres. Want dat is precies de bedoeling — verbinding, en anderen laten groeien. SAFe® noemt het zelf: "Grow and develop people." Ik zou daar aan toe willen voegen: inclusief de auteur. Want wie weet sta ik over een jaar naar dit voorwoord te kijken en denk ik: "Wat wist ík toen nog weinig." En dat, beste lezer, zou betekenen dat het gewerkt heeft. Roel Peels Maart 2026 Major Milestones B.V. — majormilestones.nl 2</p>
+        </section>
+
+        <!-- OVER DE AUTEUR -->
+        <section id="auteur" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Over de auteur</div>
+                <h2 class="chapter-title">ing. R.P. Peels</h2>
+                <div class="chapter-accent"></div>
+            </div>
+            <div class="author-card">
+                <img src="images/roel-foto.jpg" alt="Roel Peels" class="author-photo" onerror="this.outerHTML=\'<div class=\\\"author-photo-placeholder\\\">RP</div>\'">
+                <div>
+                    <div class="author-name">ing. R.P. Peels</div>
+                    <div class="author-role">Certified SAFe® Implementatie Consultant &amp; Authorised Trainer</div>
+                    <div class="author-bio">Twaalfvoudig SAFe®-gecertificeerd. Meer dan 40 jaar IT-ervaring. Transformaties begeleid bij o.a. ASML, Coca-Cola, Ministerie van Defensie en Ministerie van Justitie.</div>
+                </div>
+            </div>
+            <br>
+            <p>OVER DE AUTEUR ing. R.P. Peels Certified SAFe® Implementatie Consultant & Authorised Trainer Roel Peels combineert diepgaande en excellente kennis van het Scaled Agile Framework (SAFe®) met meer dan veertig jaar praktijkervaring in de IT. Waar veel auteurs over digitale transformaties schrijven vanuit theorie, werkt Peels al meer dan dertien jaar midden in de praktijk van grootschalige Lean-Agile en SAFe®-implementaties bij complexe organisaties. Hij is twaalfvoudig SAFe®-gecertificeerd en vervulde in zijn carrière rollen als CEO, startup-expert, Lean Portfolio Management practitioner (LPM), Release Train Engineer (RTE), SAFe® Program Consultant (SPC) en Executive Agile Coach. Zijn achtergrond als werktuigbouwkundige en technisch bedrijfskundige, gecombineerd met opleidingen aan onder meer de Erasmus Universiteit, geeft hem een zeldzame combinatie van technisch inzicht, bedrijfskundige scherpte en organisatorisch leiderschap. Wat Roel onderscheidt is zijn vermogen om op meerdere niveaus tegelijk te opereren. Hij kan denken in enterprise-strategieën, missies en visies op directieniveau, maar net zo goed zelf de vertaalslag maken naar de operatie op de werkvloer. Van portfolio-sturing en governance tot het daadwerkelijk inrichten en gebruiken van tools zoals Jira en Jira Align: Peels combineert strategisch denken met hands-on uitvoering. Hij begeleidde SAFe®-transformaties bij organisaties zoals ASML, Coca-Cola, Sanoma, het Ministerie van Justitie en het Ministerie van Defensie. Bij de laatste organisatie leidde hij als Product Owner van het SAFe® Lean-Agile Center of Excellence (LACE) de volledige transformatie van Landgebonden IT / Foxtrot, met aantoonbare resultaten en brede steun van zowel Business Owners als Executive Management. Zijn persoonlijke drijfveren — sterke prestatiegerichtheid, scherpe focus, leergierigheid en een krachtige communicatiestijl — maken hem tot een adviseur en auteur die complexe materie begrijpelijk maakt en organisaties helpt om daadwerkelijk te veranderen in plaats van er alleen over te praten. KLAAR VOOR DE VOLGENDE STAP? Een SAFe®-transformatie lezen is één ding. Er een leiden is iets anders. Major Milestones B.V. begeleidt organisaties van strategie tot executie — geen standaard aanpak, maar maatwerk gebaseerd op wat in de praktijk werkt. → Enterprise Agile & SAFe® transformaties (strategie tot uitvoering) → Leadership enablement & SAFe® executive training → Interim transformatieleiderschap (LACE, RTE, Agile leadership) → Value Stream design & Jira / Jira Align operationalisatie → Keynotes & masterclasses over Lean-Agile leadership Neem contact op via LinkedIn voor een vrijblijvend gesprek. Eerste druk, maart 2026 © 2026 ing. R.P. Peels / Major Milestones B.V. Niets uit deze uitgave mag worden verveelvoudigd zonder voorafgaande schriftelijke toestemming van de auteur. Major Milestones B.V. www.majormilestones.nl safe@majormilestones.nl linkedin.com/in/roelpeels/ SAFe® Transformaties — Van Strategie naar Executie • Major Milestones B.V. • helping people grow together</p>
+        </section>
+
+        <!-- H01 -->
+        <section id="h01" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Hoofdstuk 1 &nbsp;·&nbsp; Deel I — Introductie</div>
+                <h2 class="chapter-title">Waarom SAFe®?</h2>
+                <p class="chapter-sub">De problemen die het Framework oplost — 18 structurele knelpunten</p>
+                <div class="chapter-accent"></div>
+                <div class="chapter-meta">Maart 2026 &nbsp;·&nbsp; Roel Peels</div>
+            </div>
+            <p>SAFe® Transformaties — Van Strategie naar Executie Waarom SAFe®? De problemen die het Framework oplost Van waterval naar wendbaar — 18 structurele knelpunten Maart 2026 ing. R.P. Peels SAFe® Practice Consultant (SPC) | Authorised SAFe® Trainer (SPCT candidate)</p>
+<p>Waarom SAFe®? De problemen die het Framework oplost Maart 2026 · Voordat organisaties overstappen op het Scaled Agile Framework (SAFe®), lopen ze doorgaans tegen een reeks structurele knelpunten aan. Die knelpunten variëren per sector en organisatiegrootte, maar zijn opvallend consistent bij organisaties die werken met traditionele projectmethodieken zoals MSP en PRINCE2 — kortweg: waterval. De meest voorkomende problemen: 1. Rigide methodieken MSP en PRINCE2 volgen een strak, lineair stramien. SAFe® brengt agile en lean principes in, waardoor organisaties veel beter kunnen inspelen op verandering. 2. Gebrek aan prioritering en projectoverload Zonder een objectieve methode voor prioritering worden projecten vaak gekozen op basis van wie het hardst roept. SAFe®’s WSJF-methode (Weighted Shortest Job First) maakt economisch gefundeerde keuzes mogelijk. Het ontbreken hiervan leidt tot overvolle portfoliolijsten, resourceconflicten en uiteindelijk burn-out. 3. Inefficiënte resource-allocatie In waterval worden mensen naar het werk gebracht. In SAFe® wordt het werk naar de mensen gebracht — via langdurige, stabiele value streams. Dit voorkomt dat teams continu worden opgebroken en herverdeeld, en vermindert de bijbehorende opstarttijd en kwaliteitsverlies. 4. Lange time-to-market Producten en nieuwe initiatieven duren te lang om te ontwikkelen en te leveren. Het gevolg: gemiste marktkansen en potentieel omzetverlies. SAFe® versnelt de doorlooptijd via kortere planningscycli en continue levering. 5. Gebrek aan alignment Traditionele aanpakken leiden vaak tot verkokering: teams, afdelingen en projecten werken langs elkaar heen. SAFe® bevordert organisatiebrede afstemming zodat iedereen werkt aan dezelfde strategische doelen. 6. Beperkte flexibiliteit Trage en omslachtige change request-procedures, change boards en besluitvormingsprocessen remmen de organisatie. SAFe® introduceert wendbaarheid en het vermogen om snel te reageren op marktveranderingen. 7. Snel en simpel op- of afschalen</p>
+<p>Schalen binnen grotere organisaties is complex binnen traditionele hiërarchische structuren. SAFe® biedt concrete handvatten voor het managen van meerdere agile teams en programma’s op grote schaal — zowel horizontaal (meer ART’s, meer Agile teams) als verticaal (meer SAFe® levels). 8. Governance en compliance De balans tussen governance, compliance en wendbaarheid is vaak moeilijk te vinden. SAFe® biedt governancemechanismen die structuur geven zonder de bewegingsvrijheid te beknotten. 9. Medewerkersbetrokkenheid Traditionele managementstijlen zijn vaak directief van aard: command & control. SAFe® benadrukt medewerkersbetrokkenheid en empowerment, wat leidt tot hogere werktevredenheid en betere resultaten. 10. Kwaliteitsproblemen Watervalmethoden produceren regelmatig kwaliteitsgebreken die pas laat in het proces zichtbaar worden. SAFe®’s agile en lean werkwijzen zijn gericht op het vroegtijdig inbouwen van kwaliteit — minder defects, minder rework, conform de ‘Build-in quality’ principes. 11. Verkokerde organisaties en Conway’s Law Afdelingen en teams die in silo’s werken, resulteren in systemen die de organisatiestructuur spiegelen (ref: Conway’s Law). SAFe® stimuleert cross-functionele samenwerking en breekt deze silo’s actief af. 12. Ineffectieve communicatie Communicatiestoornissen op alle niveaus — van strategische visie tot teamoverleg — zijn een hardnekkig probleem. SAFe® werkt met een vooraf vastgesteld en doordacht cadans, zodat alle betrokkenen altijd op één lijn zitten. 13. Push versus pull Traditionele organisaties werken primair push-gestuurd: werk wordt opgelegd, wat leidt tot stress, burn-out en kwaliteitsverlies. SAFe® is pull-gestuurd. Scrum Masters en RTE’s bewaken actief dat teams niet te veel committeren. 14. Gebrek aan continu verbeteren SAFe® legt veel meer nadruk op een cultuur van continue verbetering dan waterval. Een concreet voorbeeld is de IP-iteratie (Innovation & Planning), speciaal ingericht voor reflectie, innovatie en verbetering. 15. Lage productiviteit Silo’s zijn niet zo productief als ze zouden kunnen zijn, wat leidt tot inefficiëntie, gemiste deadlines en hogere kosten. Een veel gehoorde klacht is ‘over de schutting gooien’ of ‘te laat betrokken’. SAFe® optimaliseert de capaciteits- en werklaadverdeling tijdens meerdere planningsevenementen. 16. Trage besluitvorming Stuurgroepen die eens per maand bijeenkomen. Alle beslissingen die bij het management liggen. In watervalorganisaties is dit de norm, en het remt de doorstroom van waarde ernstig. SAFe® bevordert gedecentraliseerde besluitvorming, wat de flow van waarde direct ten goede komt.</p>
+<li>17. Overmatige papierwinkel Projectplannen van veertig pagina’s, uitgebreide documentatieprocessen: ze kosten tijd, geld en zorgen regelmatig voor fouten. SAFe® werkt met een éénpagina Epic Hypothesis Statement en een Lean Business Case van maximaal twee pagina’s. 18. Gebrek aan transparantie PRINCE2 en MSP hebben van oudsher een formeel, documentatiegedreven karakter dat problemen kan verbergen en heldere communicatie belemmert. SAFe® pakt dit aan met transparantieprincipes zoals Big Visible Information Radiators (BVIR) — vrij toegankelijk voor iedereen in de organisatie. – einde – Roel Peels · Major Milestones B.V. · majormilestones.nl · safe@majormilestones.nl 4</li>
+        </section>
+
+        <!-- H02 -->
+        <section id="h02" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Hoofdstuk 2 &nbsp;·&nbsp; Deel I — Introductie</div>
+                <h2 class="chapter-title">SAFe® voor Dummies</h2>
+                <p class="chapter-sub">Wendbaar werken in Jip-en-Janneke-taal</p>
+                <div class="chapter-accent"></div>
+                <div class="chapter-meta">23 mei 2025 &nbsp;·&nbsp; Roel Peels</div>
+            </div>
+            <p>SAFe® Transformaties — Van Strategie naar Executie SAFe® voor Dummies – Wendbaar Werken in Jip-en-Janneke-taal Een toegankelijke introductie op het SAFe® framework 23 mei 2025 ing. R.P. Peels SAFe® Practice Consultant (SPC) | Authorised SAFe® Trainer (SPCT candidate)</p>
+<p>Je ziet en hoort het woord SAFe steeds vaker in gesprekken, rapporten, beleidsstukken en trainingen. Toch vragen veel mensen zich af: wat is dat nou eigenlijk, 'SAFe'? Het klinkt ingewikkeld, zit vol Engelse termen, en doet denken aan ICT'ers met managementjargon. Speciaal voor iedereen die daar (nog) niet goed mee bekend is, is deze uitleg geschreven – zo helder mogelijk, in Jip-en-Janneke-taal, met toelichting op de belangrijkste SAFe-termen. Dit artikel geeft antwoord op de meest gestelde vragen: 1. Waarom is iets als SAFe® nodig? Op welk probleem is SAFe het antwoord? 2. Waar komt SAFe vandaan, van wie is SAFe? Uit welke vakgebieden is SAFe opgebouwd? 3. Is SAFe alleen maar voor Software? Is SAFe alleen maar voor ontwikkeling of ook voor beheer? 4. Wat is het verschil tussen Scrum en SAFe? 5. Hoe leg je SAFe uit in max 3 zinnen? 6. Hoe implementeer je SAFe? Wat gebeurt er met de lijnorganisatie in SAFe? 7. Hoe stroomt waarde door SAFe? Hoe kom je van een missie naar concrete producten en diensten? 8. Projectmanagement kent de duivelsdriehoek: hoe werkt dat in SAFe? 9. Wat is het exacte verschil tussen projectmanagement en SAFe? 10. Wat zijn de allerbelangrijkste woordjes in SAFe – rolnamen, begrippen? Allereerst: Waarom iets als SAFe® nodig is! Laten we deze publicatie starten met het probleem waarvoor SAFe 'het antwoord is'. In grote organisaties wordt er vaak gewerkt volgens de watervalmethode, met marktbekende methodieken als PPM, PRINCE2 en MSP. Daarbij wordt alles van tevoren uitgedacht, gepland en daarna uitgevoerd – stap voor stap. Dat werkt goed bij voorspelbare projecten, zoals het bouwen van een brug of iets wat je al 10x eerder hebt gedaan en veel routine in hebt. Je weet dan wat je weet en wat je niet weet. Maar deze aanpak werkt niet meer bij complexe, grootschalige IT-transformaties. Want dan weet je namelijk niet wat je niet weet – het werken naar de oplossing wordt een 'zoektocht' en vergt maximale wendbaarheid ('Agile'). Dr. Ir. Niels Groen onderzocht waarom zulke watervalprojekten vaak mislukken en beschreef dat in zijn boek 'De Bodemloze Put – Escalerend Commitment in Publieke IT-projecten'. De belangrijkste oorzaken: • De wereld verandert sneller dan het projectplan. • Gebruikerswensen worden onvoldoende opgehaald en meegenomen. • Politieke beloften leiden tot druk om door te gaan, ook als het project niet werkt. • Er is al zoveel geïnvesteerd dat stoppen 'geen optie meer is'. • Onduidelijke besluitvorming en verantwoordelijkheden. • De kloof tussen beheer en ontwikkeling leidt tot problemen en vertragingen ('over muur gooien'). • Een te groot geloof in voorspelbaarheid en maakbaarheid (plannen maken tot 2035). Kortom, de wereld is grillig en vooral onvoorspelbaar bij complexere zaken. Grote organisaties moeten snel kunnen schakelen, juist nu door de huidige geopolitieke realiteit. Dat lukt helaas niet met ouderwetse, trage, bureaucratische aanpakken. Of zoals John P. Kotter zegt: "The world is now changing at a rate at which the basic systems, structures, and cultures built over the past century cannot keep up with the demands being placed on them." SAFe – een raamwerk voor het wendbaar maken van hele grote organisaties SAFe staat voor Scaled Agile Framework voor lean enterprises. Het is ontwikkeld in Amerika door Dean Leffingwell en telt nu circa 220 FTE in een softwareorganisatie die Scaled Agile, Inc. heet. Scaled Agile helpt met hun framework SAFe grote organisaties in het geheel wendbaarder te worden, zonder grip te verliezen op kwaliteit, richting en structuur. Het is geen losse, volledig nieuw bedachte methode, maar een</p>
+<p>verzameling van in de markt bewezen praktijken en inzichten, samengebracht in één geïntegreerd raamwerk. SAFe combineert denkwijzen, principes en methoden als: • Agile Mindset (2001 – ontstaan uit softwareontwikkeling) • Lean (1950 – ontwikkeld bij Toyota) • DevSecOps (2009 – uit de behoefte om 'ontwikkelen' en 'beheren' beter te verbinden) Bedrijfskundige inzichten (zoals Design Thinking, Lean-UX, OKR's, TDD, SWOT en Ishikawa Root • Cause Analysis, Dual OS van Kotter) Dean Leffingwell, de bedenker van SAFe, bracht dit alles samen in zijn framework in het jaar 2011. Zijn visie toendertijd: Scrum werkt voor kleine teams, maar niet voor grote uitdagingen waarvoor je honderden mensen nodig hebt – zoals de bouw van een ASML-machine. SAFe – Scaled Scrum Daarom introduceerde Dean Leffingwell 3 nieuwe concepten als aanvulling op Scrum: Agile Release Trains (ART's) – Dit is een Team van Agile Teams dat werkt als één groot Scrumteam (bijv. 1 ART = 10 Scrumteams × 10 members = 100 members). De ART wordt beheerd door 3 • kernrollen: de RTE, de PM en de SA. Solution Trains (ST's) – meerdere ART's samen die werken aan één geïntegreerde oplossing (bijv. 10 • ART's van 100 FTE = ca. 1.000 FTE in 1 ST). Een ST wordt beheerd door de STE, SM en SA. Lean Portfolio Management (LPM) – een portfolioapproach om wendbaar om te gaan met vraag en aanbod. De LPM-laag wordt gefaciliteerd door Epic Owners, Enterprise Architecten, Business Owners • en Executive Management. SAFe anno 2025 – allang niet meer alleen voor software of alleen ontwikkeling SAFe is ooit begonnen als framework voor grootschalige softwareontwikkeling, geïnspireerd door het Agile Manifesto van 2001. Inmiddels is het uitgegroeid tot een breed toepasbaar raamwerk voor complexe organisatieveranderingen, ver buiten de IT. SAFe helpt organisaties bij het organiseren van multidisciplinaire samenwerking – van IT tot inkoop, van hardware tot cyber-physical systems, van operatie tot beleid. Een belangrijk kenmerk is dat SAFe het volledige traject van ontwikkeling tot beheer dekt, dankzij de integratie van DevOps. Elk Agile Team is in feite een DevOps-team dat verantwoordelijk is voor zowel bouwen als beheren (Build & Run). Klassieke frameworks zoals BiSL en ASL2 zijn hierdoor vaak overbodig geworden. SAFe kan samenwerken met ITIL-processen zoals Incident Management of Configuration Management, maar veel van deze praktijken zijn al impliciet opgenomen in SAFe. Het uitgangspunt: als iets niet direct bijdraagt aan waarde, flow of snelle feedback, dan moet je het durven herzien. Formele definitie van SAFe Tijdens de SAFe-lessen leer je het volgende antwoord op de vraag 'wat is SAFe?': "SAFe® 6.0 for Lean Enterprises is werelds leidend opensource scaled agile framework voor het behalen van Enterprise Business Agility. SAFe integreert in één raamwerk de kracht van (1) Lean, (2) Agile & (3) DevSecOps. SAFe helpt organisaties innovatieve producten & diensten (1) sneller, (2) met een hogere kwaliteit, (3) hogere betrouwbaarheid en (4) hogere werknemerstevredenheid op de markt te brengen." Maar ook bondig en helder:</p>
+<blockquote class="bq">"Met toepassing van het SAFe Framework kunnen we de hele organisatie wendbaarder maken, beter reageren op veranderingen in de wereld en levertijden drastisch inkorten." Of heel kort: "SAFe is de geschaalde versie van Scrum." SAFe is een tweede besturingssysteem SAFe bouwt geen tijdelijke projectstructuren naast de bestaande hiërarchie. SAFe introduceert een tweede besturingssysteem dat over alle afdelingen heen werkt ('Cross-Functional'). Dat kan door en over de hele organisatie zijn (meest ideale situatie), of alleen over één of meerdere IT-afdelingen. In de wandelgangen noemen we dat tweede besturingssysteem vaak de 'SAFe Fabriek'. Daarmee ontstaat samenwerking zónder te verdwalen in bureaucratie en afdelingssilo's. SAFe verandert dus niets aan de bestaande afdelingen of de bestaande hiërarchie. Kenmerken van dit tweede systeem: • Er zijn vaste door SAFe gedefinieerde rollen als Product Owner, Scrum Master, RTE, Architect. • De fundatie van SAFe zijn multi-disciplinaire, cross-functionele agile teams die zichzelf organiseren. • Agile teams werken allemaal, tegelijk in een vaste cadans: iteraties van 2 weken. • De ART's werken ook allemaal, tegelijk in een vaste cadans: iteraties van 10 weken. Vaste door SAFe gedefinieerde vergaderingen die volledig op elkaar zijn afgestemd (PI Planning, • Inspect & Adapt, System Demo, Product Owner Sync, Portfolio Sync, etc.). Vaste ontwikkelstraat voor de ontwikkeling van producten en diensten met 4 standaard fasen: • Exploration, Integration, Deployment en Release. • SAFe experts prioriteren economisch via Cost of Delay en relatieve storypoints (Fibonacci's reeks). SAFe's Flow of Value: Van missie en strategie naar uitvoering in korte cycli Het werk in SAFe stroomt van: De Lean Portfolio Management (LPM) laag bovenaan: van Enterprise missie/visie fi organisatiestrategie → strategische thema's met OKR's → portfolios → Epics (economisch geprioriteerd • via WSJF). • Naar de Agile Release Trains (midden): → Features op ART-niveau. • Naar de Agile Teams (onderin): → User Stories op teamniveau. • En weer terug als alle User Stories, Features en Epics zijn ontwikkeld én geaccepteerd. Al deze requirements worden visueel weergegeven op met elkaar verbonden Kanbanborden. 'Kanban' is een Japans woord dat letterlijk 'visueel bord' betekent en komt uit de Lean-filosofie. In SAFe is dit een van de krachtigste hulpmiddelen: elk niveau – van team tot portfolio – maakt gebruik van een eigen Kanbanbord om werk zichtbaar te maken, te organiseren en te beheren. Doordat deze borden met elkaar gekoppeld zijn, ontstaat een continu en transparant overzicht van de stroom van werk (de flow) door de organisatie. SAFe experts hebben tools en middelen om te meten hoe snel die 'waarde' door alle Kanbanborden loopt. Dat heet 'Flow'. In SAFe zijn tijd en geld, kwaliteit fixed: Functionaliteit fluctueert In tegenstelling tot projecten, staan in SAFe Tijd, Geld en Kwaliteit vast: Tijd van 1 iteratie van 10 dagen + vaste team van mensen tegen vaste kosten met vaste kwaliteit (dat noemen agilisten Definition of Ready en Definition of Done). Alleen wat er haalbaar is om te bouwen in die 2 weken is flexibel – de hoeveelheid functionaliteit die het team gaat opleveren. Klanten kunnen en mogen in SAFe elke 2 weken hun wensen aanpassen. Daar kan SAFe uitstekend mee omgaan; afwijkingsrapportages kent SAFe niet.</blockquote>
+<p>Bij traditionele projecten is dit anders, waardoor projecten kunnen 'uitlopen'. Een project krijgt fixed geld, fixed scope, fixed functionaliteit – en dan proberen projectteams dat te bouwen. Maar dat blijkt in de praktijk altijd ellende: na 2 jaar 'iets krijgen waar niemand om heeft gevraagd'. SAFe implementeren = leren SAFe is geen kant-en-klare werkaanpak die je uitpakt en direct begint. Het is veelal toch maatwerk en vooral een leerproces voor iedereen in de SAFe Fabriek. Je begint meestal klein met één ART en groeit dan. Als je SAFe implementeert verandert er een en ander voor zittend management en zeker ook voor de gebruikers en werknemers – alhoewel die verandering in de praktijk voor de laatste groep minder groot is dan de meeste denken. Immers, softwareontwikkelaars ontwikkelen software en blijven dat doen. Het enige verschil nu is dat er een paar standaard ceremonies zijn. Resumé: hoe SAFe verschilt van PRINCE2 en MSP Onderdeel Waterval / PRINCE2 / MSP SAFe Resourcing Tijdelijke projectteams Vaste Agile Teams met stabiele samenstelling Werkwijze Alles vooraf plannen Iteratief plannen en steeds bijstellen Gebruikers Begin & einde Continu betrokken Leiderschap Top-down, hiërarchisch Faciliterend, dienend leiderschap Flexibiliteit Lage aanpasbaarheid Hoge wendbaarheid Resultaten Grote opleveringen in één keer Kleine werkende resultaten elke 2 weken Focus Tijdelijke projecten die 'iets opleveren' Producten onderhouden door 'long lived agile teams' – geen start-stops meer SAFe heeft eigen termen – maar die leer je snel SAFe gebruikt termen die in het begin wat 'Amerikaans' aanvoelen. Maar goed nieuws: met ca. 40 woordjes/begrippen kun je al prima als echte SAFe expert meepraten! In de praktijk wennen de nieuwe woordjes erg snel. Conclusie – Waarom grote organisaties niet zonder SAFe kunnen SAFe helpt grote organisaties om wendbaar te worden zonder grip en structuur te verliezen. In een wereld die steeds sneller verandert, zijn klassieke projectmethodes zoals PRINCE2 en MSP te traag en inflexibel. SAFe biedt vaste rollen, teams en ritmes, maar laat tegelijk ruimte voor continue bijsturing. Daardoor kunnen SAFe-organisaties sneller reageren op veranderingen, en vaker waarde leveren aan hun klanten of burgers. SAFe doorbreekt silo's en maakt samenwerking over afdelingen heen mogelijk. Het is geen hype, maar een bewezen aanpak om grote organisaties toekomstbestendig te maken. Bijlage – Belangrijkste begrippen in SAFe Onderstaande begrippen zijn SAFe Versie 6.0 compliant. SAFe Lagen • Portfolio laag (LPM) – kiest de juiste Epics en verdeelt budget • Large Solution laag (ST) – coördineert meerdere ART's • Essential Laag – bevat ART's en Agile teams (minimale configuratie van SAFe)</p>
+<p>Belangrijkste Rollen • De Portfolio Function – de functie die Epics selecteert en strategisch stuurt • Epic Owner – eigenaar van een Epic • Business Owner (BO) – verantwoordelijke business stakeholder • Solution Train – meerdere ART's samen • ART – Agile Release Train (team van teams) • RTE – Release Train Engineer: de Scrum Master van de ART. De Master of the Scrum Masters. • SA – System Architect: technisch geweten van de ART • PM – Product Manager: eigenaar van de Features en de Super Product Owner • PO – Product Owner: eigenaar van de Stories, werkt nauw samen met de PM • SM – Scrum Master/Teamcoach, werkt nauw samen met de RTE • Shared Services – specialisten die meerdere teams ondersteunen (bijv. security, legal) Belangrijkste Events • PI Planning – het belangrijkste event: teams plannen samen het werk voor de komende PI • Inspect & Adapt (I&A) – evaluatie en verbetersessie aan het einde van een PI • System Demo – gezamenlijke demo van werkende software • Innovation & Planning Iteration (IP-Iteratie) – ruimte voor innovatie en verbetering Processen en concepten • PI – Planning Interval (ca. 10 weken) • Iteration – 2 weken werken, daarna demo • Value Stream – stroom van waarde voor de klant • Agile Product Delivery – snel én duurzaam waarde leveren • DevOps – samenwerking tussen Dev & Ops • Continuous Delivery Pipeline: Exploration, Integration, Deployment en Release on Demand • Design Thinking – ontwerpen vanuit de klant • Customer Centricity – klant staat centraal • Relentless Improvement – een SAFe kernwaarde: continu verbeteren Belangrijkste Artifacten • LPM Kanban – bord op portfolioniveau • ART Kanban – bord voor ART-niveau • Team Kanban – bord voor werk op teamniveau • Epic – groot initiatief met business waarde waar SAFe mee start • Feature – onderdeel van een Epic, realiseerbaar binnen één PI • User Story – klein werkpakket voor het team • Enabler – werk dat technische voorbereiding of compliance vereist • Capacity Allocation – verdeling van tijd tussen Run en Change (DevOps) • Built-in Quality – kwaliteit is ingebouwd in elk onderdeel • Lean Budgeting – wendbaar budgetteren met financiering op waarde © 23 mei 2025 | Roel Peels · Major Milestones B.V. · majormilestones.nl · safe@majormilestones.nl Pagina 6</p>
+        </section>
+
+        <!-- H03 -->
+        <section id="h03" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Hoofdstuk 3 &nbsp;·&nbsp; Deel I — Introductie</div>
+                <h2 class="chapter-title">SAFe® Ontleed</h2>
+                <p class="chapter-sub">Oorsprong en het Ecosysteem — Achter 's Werelds Grootste Agile Framework</p>
+                <div class="chapter-accent"></div>
+                <div class="chapter-meta">4 maart 2026 &nbsp;·&nbsp; Roel Peels</div>
+            </div>
+            <p>SAFe® Transformaties — Van Strategie naar Executie SAFe Ontleed: Oorsprong en het Ecosysteem Achter ’s Werelds Grootste Agile Framework 4 maart 2026 ing. R.P. Peels Certified SAFe® Implementatie Consultant & Authorised Trainer</p>
+<p>MAJOR MILESTONES SAFe Ontleed: Oorsprong en het Ecosysteem SAFe Ontleed: Oorsprong en het Ecosysteem Achter ’s Werelds Grootste Agile Framework 4 maart 2026 · Roel Peels, Major Milestones B.V. SAFe Ontleed: Oorsprong en het Ecosysteem Achter ’s Werelds Grootste Agile Framework Wie met SAFe aan de slag gaat, doet er goed aan te begrijpen wie er achter dit framework zit. SAFe — de afkorting van Scaled Agile Framework — werd ontwikkeld door Dean Leffingwell, een Amerikaanse softwareondernemer, auteur en denker op het gebied van grootschalige softwareontwikkeling. De wortels van het framework liggen in zijn boek uit 2007 Scaling Software Agility: Best Practices for Large Enterprises, waarin hij de basisprincipes beschreef voor het schalen van agile werkwijzen in grote organisaties. Op basis daarvan lanceerde hij in 2011 de eerste officiële versie van SAFe, en sindsdien is het framework uitgegroeid tot de mondiale standaard voor bedrijfswendbaarheid. Het framework is eigendom van Scaled Agile, Inc., een privaat bedrijf gevestigd in Boulder, Colorado, in de Verenigde Staten. Met circa 250 medewerkers (niet precies bekend) richt het bedrijf zich volledig op de verdere ontwikkeling, het beheer en de verspreiding van SAFe, ondersteund door een uitgebreid programma van trainingen en certificeringen. In november 2021 vestigde het investeringsbedrijf Eurazeo — afkomstig uit Frankrijk — een meerderheidsbelang in Scaled Agile, Inc. met een investering van circa 300 miljoen dollar. Die stap bevestigde niet alleen de financiële slagkracht van het bedrijf, maar ook de brede erkenning van SAFe als strategisch waardevol raamwerk voor organisaties wereldwijd. Scaled Agile, Inc. opereert vanuit een breed en actief ecosysteem. Meer dan 500 partner- en transformatiebedrijven zijn wereldwijd gecertificeerd om organisaties te begeleiden bij SAFe-implementaties, verspreid over meer dan 110 landen. Inmiddels werken meer dan 20.000 organisaties — van snelgroeiende startups tot wereldwijde ondernemingen — met het framework, en meer dan een miljoen professionals volgden een SAFe-opleiding. Gartner erkent SAFe als het meest gehanteerde en overwogen framework voor het schalen van agile, met een marktaandeel van ~30% procent (ref: State of Agile Report) en nog steeds groeiend. SAFe’s evolutie Het SAFe-framework heeft sinds zijn introductie een duidelijke evolutie doorgemaakt, zoals in de tabel onder te zien is. Sinds de eerste release in 2011 zijn er meerdere grote versies verschenen die het framework stap voor stap hebben uitgebreid. Versie 3.0 uit 2014 introduceerde het portfolioniveau, waardoor strategische afstemming voor het eerst expliciet onderdeel werd van het model. Met versie 4.0 in 2016 werd de structuur rond value streams verder uitgewerkt en kreeg het framework een duidelijkere architectuur voor grootschalige implementaties. In versie 4.5 uit 2017 werden DevOps en de Continuous Delivery Pipeline nadrukkelijk geïntegreerd en werd het framework gepresenteerd in vier herkenbare configuraties: Essential, Large Solution, Portfolio en Full SAFe. Met de introductie van versie 5.0 in 2020 verschoof de nadruk naar Business Agility, ondersteund door een set van totaal 7 kerncompetenties die organisaties helpen wendbaarder te worden. De meest recente versie, SAFe 6.0, verscheen in maart 2023 en legt een sterke nadruk op flow-optimalisatie, betere samenwerking in value streams en verdere ondersteuning van moderne software- en productontwikkeling. Samen laten deze versies zien hoe het framework zich blijft ontwikkelen in lijn met de behoeften van organisaties die agile werkwijzen op schaal toepassen.</p>
+<p>MAJOR MILESTONES SAFe Ontleed: Oorsprong en het Ecosysteem SAFe is meer dan alleen voor software Veel mensen associëren SAFe nog steeds uitsluitend met softwareontwikkeling. Dat beeld komt deels voort uit het Agile Manifesto, waarin softwareontwikkeling centraal staat. In de praktijk is het framework echter al lang breder toepasbaar. SAFe is door de jaren heen uitgebreid met concepten en praktijken die geschikt zijn voor complexe systeemontwikkeling, waarin software, firmware, hardware en cybersecurity samenkomen. Vooral in sectoren zoals defensie, automotive, aerospace en industriële systemen werken organisaties immers niet alleen aan software, maar aan geïntegreerde systemen. Om die reden heeft Scaled Agile het framework verder ontwikkeld met aanvullende guidance en trainingen, waaronder het recente SAFe for Hardware-programma, waarin specifieke principes, cadans en ontwikkelpraktijken voor hardwareontwikkeling worden behandeld. Daarmee positioneert SAFe zich nadrukkelijk als een framework voor end-to-end systeemontwikkeling, en niet uitsluitend voor software. Gecertificeerde professionals en actieve expertise Een van de sterkste indicatoren van het succes van SAFe is het aantal mensen dat wereldwijd met het framework werkt. Meer dan een miljoen professionals zijn getraind via het SAFe-certificeringsprogramma, dat is opgebouwd rondom verschillende rollen en niveaus binnen een agile organisatie. De Leading SAFe-certificering — ook wel aangeduid als SA — is daarbinnen een van de meest gevraagde en meest afgenomen trajecten, al worden de exacte aantallen per certificeringsniveau niet openbaar gemaakt. Achter die miljoenengroep staat een robuust netwerk van praktijkexperts. SAFe Practice Consultants — de zogenoemde SPC’s — vormen de ruggengraat van dat netwerk. Zij zijn gecertificeerd om organisaties te begeleiden bij SAFe-transformaties en om andere professionals te trainen en te certificeren. Naast de SPC’s zijn er Release Train Engineers (RTE’s) en tal van andere gecertificeerde specialisten die dagelijks actief zijn in SAFe-omgevingen bij bedrijven over de hele wereld. Samen zorgen zij ervoor dat de kennis en het gebruik van het framework levend en actueel blijven, ook buiten de directe invloedssfeer van Scaled Agile, Inc. zelf. Het allerhoogste haalbare certificeringsniveau is dat van SAFe Program Consultant Trainer (SPCT). SPCT’s vormen een kleine, wereldwijd geselecteerde groep experts die bevoegd zijn om SAFe Program Consultants (SPC’s) op te leiden en te certificeren. Zij spelen een belangrijke rol in de kwaliteitsborging en verdere ontwikkeling van het SAFe-framework. Let op, wereldwijd zijn ‘er maar’ circa 100 SPCT’s, waarvan ongeveer 5 in Nederland. Dit betekent dat het SPCT certificeringsniveau tot een van de meest exclusieve rollen binnen het SAFe-ecosysteem is. Het SAFe-ecosysteem SAFe is allang meer dan een framework op papier — het is een levend ecosysteem van mensen, bedrijven en kennis. Wereldwijd zijn meer dan 500 gecertificeerde partner- en transformatiebedrijven actief als deel van het officiële SAFe-netwerk, aanwezig in meer dan 110+ landen. Zij ondersteunen organisaties van elke omvang en sector bij de implementatie van het framework, van de eerste oriëntatie tot volwassen transformaties over meerdere Agile Release Trains. Meer dan 20.000 organisaties wereldwijd werken inmiddels met SAFe — van kleine, wendbare bedrijven tot grote multinationals in sectoren als financiën, gezondheidszorg, overheid en technologie. De bedrijfswaarde van Scaled Agile, Inc. De overname door Eurazeo in november 2021 gaf een eerste concrete indicatie van wat Scaled Agile, Inc. waard is. Met een investering, volgens analisten, van circa 300 - 350 miljoen dollar voor een meerderheidsbelang werd de totale bedrijfswaarde destijds geschat op 400 tot 500 miljoen dollar. Dat</p>
+<p>MAJOR MILESTONES SAFe Ontleed: Oorsprong en het Ecosysteem was echter nog maar een beginpunt. Sindsdien is de adoptie van SAFe verder gegroeid, en in 2023 nam Scaled Agile ook Rentouch over — een overname die het aanbod van het bedrijf verder verbreedde. Wanneer je die groei en marktdynamiek meeneemt, is een huidige bedrijfswaarde van 600 tot 800 miljoen dollar een reële schatting, hoewel het exacte getal afhankelijk blijft van bredere marktfactoren en toekomstige ontwikkelingen. De huidige waarde van Scaled Agile, Inc. valt dan ook niet los te zien van de groeiende wereldwijde vraag naar Lean-Agile-transformaties. Naarmate meer organisaties op zoek gaan naar bewezen methodes om complexe veranderingen in goede banen te leiden, blijft SAFe aan relevantie winnen. Een bedrijfswaarde van 600 tot 800 miljoen dollar is in dat licht een plausibele en conservatieve schatting — een getal dat de strategische positie van Scaled Agile, Inc. weerspiegelt in een markt die nog lang niet zijn plafond heeft bereikt. Historisch overzicht van SAFe-versies en release-data De onderstaande evolutie van SAFe laat zien dat het framework zich voortdurend aanpast aan nieuwe technologische en organisatorische realiteiten. Wat begon als een model voor het schalen van agile softwareontwikkeling is uitgegroeid tot een breed toepasbaar raamwerk voor complexe organisaties die wendbaarheid op grote schaal willen realiseren. SAFe versie Release datum Opmerking SAFe 1.0 2011 Eerste publieke versie van het framework SAFe 2.0 2013 Eerste grotere structurering van het model SAFe 3.0 2014 Introductie van Value Streams en Portfolio niveau SAFe 3.5 2015 ART stabilisatie, architectuur, scaling patterns SAFe 4.0 Jan 2016 Grote update met nieuwe configuraties SAFe 4.5 Apr 2017 Introductie van Lean Portfolio Management en DevOps. SAFe 5.0 Jan 2020 Focus op Business Agility en Customer Centricity SAFe 5.1 Feb 2021 Kleine update met verbeteringen en verduidelijkingen SAFe 6.0 Mar 2023 Flow Accelerators, AI-ondersteuning, uitbreidingen in Measure & Grow en een sterkere focus op Value Streams. SAFe 6.0.1 Jul 2023 Kleine maintenance update SAFe 6.0.2 Nov 2023 Laatste kleine update / correcties Tabel 1 — Historisch overzicht SAFe® versies en release-data — einde artikel — Major Milestones B.V. — majormilestones.nl 3 4 maart 2026</p>
+        </section>
+
+        <!-- H04 -->
+        <section id="h04" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Hoofdstuk 4 &nbsp;·&nbsp; Deel I — Introductie</div>
+                <h2 class="chapter-title">Het DNA van SAFe®</h2>
+                <p class="chapter-sub">Oorsprong, opbouw en de kracht achter het framework</p>
+                <div class="chapter-accent"></div>
+                <div class="chapter-meta">Maart 2026 &nbsp;·&nbsp; Roel Peels</div>
+            </div>
+            <p>SAFe® Transformaties — Van Strategie naar Executie Het DNA van SAFe® Oorsprong, opbouw en de kracht achter het framework Introductie — Boekhoofstuk ing. R.P. Peels Certified SAFe® Implementatie Consultant & Authorised Trainer</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework Het DNA van SAFe® Oorsprong, opbouw en de kracht achter het framework Introductie · Roel Peels, Major Milestones B.V. Waarom dit hoofdstuk er moet zijn Als je dit boek openslaat, is de kans groot dat je organisatie midden in een SAFe-transformatie zit — of er een overweegt. In de hoofdstukken die volgen duiken we diep in de praktijk: work item modellen, governance-inrichting, Jira Align-configuratie, portfolio management en de tientallen ontwerpbeslissingen die je moet nemen voordat je ook maar één tool aanraakt. Maar al die hoofdstukken veronderstellen dat je begrijpt wat SAFe® is. Niet op slidedeck-niveau, maar écht: wat het framework drijft, hoe het is opgebouwd, en waarom het werkt zoals het werkt. Zonder die basis lees je de rest van dit boek als een handleiding zonder context — je ziet de stappen, maar niet het waarom. Dit eerste hoofdstuk legt dat belangrijke fundament. We beginnen bij de oorsprong: waarom Agile ontstond, wat Scrum en Lean eraan toevoegden, en hoe SAFe die stromingen samenbrengt tot één schaalbaar model. Daarna nemen we je mee door de opbouw van het framework — van team tot portfolio — en sluiten we af met een verzameling korte video’s waarmee je het in je eigen tempo kunt verkennen. Beschouw dit hoofdstuk als je kompas. Hoe beter je dit begrijpt, hoe scherper je de keuzes in de rest van het boek kunt beoordelen. Wat is SAFe®? Scaled Agile Framework for Enterprises, afgekort SAFe® for Lean Enterprises is ’s werelds leidende scaled agile framework voor het behalen van Enterprise Business Agility. SAFe® integreert in één raamwerk de kracht van Lean, Agile en DevOps. SAFe® helpt organisaties innovatieve producten & diensten (1) sneller, (2) met hogere kwaliteit, (3) met hogere betrouwbaarheid en (4) hogere werknemerstevredenheid op de markt te brengen. Dat is de formele definitie. Maar wat betekent dat in de praktijk? SAFe®, onstaan in het jaar 2011, is een bewezen kennisbank van principes, praktijken en competenties waarmee grote organisaties wendbaarheid bereiken op enterprise-schaal. Het is geen abstract model dat in een la verdwijnt — het is een operationeel raamwerk, een business operating model, dat bepaalt hoe je strategie vertaalt naar taken op team niveau en tot een goed werkend product, hoe je honderden mensen laat samenwerken, en hoe je dat meetbaar en bestuurbaar houdt. De kern in één zin SAFe brengt strategie en uitvoering samen: van de visie van de directie tot het werk dat teams dagelijks oppakken — in één doorlopende, transparante keten. Vier pijlers, één framework SAFe® is niet uit het niets ontstaan. Het integreert decennia aan bewezen inzichten uit vier pijlers:</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework • Agile — Iteratief en incrementeel ontwikkelen in kleine, zelforganiserende teams. Denk aan het Agile Manifesto als absolute basis met Scrum en Kanban als emperisch toegepaste processmodellen: korte cycli, snelle feedback, continu leren. • Lean — Afkomstig uit het Toyota Production System. Focus op waardestroom, eliminatie van verspilling, en respect voor de mensen die het werk doen. • Systems Thinking — Begrijp het geheel voordat je de delen optimaliseert. Voorkom suboptimalisatie, herken feedback loops, en ontwerp oplossingen die het hele systeem versterken — niet alleen één team of afdeling. • DevOps (inclusief DevSecOps) — De brug tussen ontwikkeling, security en operations. SAFe® behandelt DevOps en DevSecOps als synoniemen: security is geen aparte laag, maar zit verweven in elke stap van de delivery pipeline. Continue integratie, continue levering, en een cultuur van gedeelde verantwoordelijkheid voor het eindresultaat. Elk van deze pijlers is krachtig op zichzelf. SAFe® combineert ze tot een samenhangend model dat werkt voor tientallen of zelfs honderden teams tegelijk. De vier beloftes uit de definitie — sneller, hogere kwaliteit, hogere betrouwbaarheid en hogere werknemerstevredenheid — zijn geen marketingpraat, maar de meetbare uitkomsten wanneer je deze vier pijlers goed laat samenwerken op schaal. SAFe®: integratie én innovatie SAFe® wordt soms afgedaan als ‘niets nieuws’ — een framework dat alleen bestaande ideeën bij elkaar harkt tot 1 model. Dat is een klein misverstand. De waarheid is genuanceerder. Want, ja, SAFe heeft enorm veel overgenomen van de markt. Op teamniveau herken je Scrum, Kanban, XP en Lean. Reinertsen’s Product Development Flow en Kotter’s verandermanagement zitten diep verweven in SAFe’s DNA. Het overzicht aan het eind van dit hoofdstuk toont meer dan vijftig best practices die SAFe heeft geïntegreerd — stuk voor stuk bewezen methodieken met hun eigen grondleggers. In die zin is SAFe inderdaad een greatest hits album: de nummers zijn niet nieuw, de compilatie wel. En wie de originele artiesten kent, leert SAFe in een fractie van de tijd. Maar SAFe heeft óók zelf fundamentele concepten ontwikkeld die nergens anders bestonden en waar de eer volledig aan SAFe zelf toekomt, zoals o.a.: • De Agile Release Train (ART) — Het idee om 50–125 mensen (conform Dunbar’s numbers) te organiseren als een langlevend ‘team of teams’ dat op vaste cadence samenwerkt en levert. • PI Planning — Het grote, gezamenlijke planningsevenement waarin alle teams van een ART face-to-face hun Plannings Interval plannen. Geïnspireerd door Lean’s Obeya (‘big room’), maar door SAFe geformaliseerd tot een gestructureerd, herhaalbaar evenement met een specifiek format, rollen en artefacten. • De Release Train Engineer (RTE) — Een volledig nieuwe rol: de ‘uber-ScrumMaster’, de Master der Scrum Masters, die op programmaniveau de ART faciliteert, impediments escaleert en de cadence bewaakt en de CICD pipeline mede engineert. Deze rol bestond niet vóór SAFe. • Het Plannings Interval (PI) — De 8–12 weken timebox als ritmisch hart van het framework, met de Innovation & Planning Iteration (laatste in een PI) als ingebouwde buffer voor innovatie en verbetering tussen PI’s. • Solution Trains — Het schalen boven ART-niveau: meerdere ART’s en leveranciers cooördineren rondom één grote oplossing. • Lean Portfolio Management — De complete portfoliolaag (ook LPM genoemd) die strategie, lean budgeting, guardrails en epic-governance koppelt aan de uitvoering. SAFe was het eerste framework dat dit zo expliciet uitwerkte.</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework • De gelaagde architectuur — De doorlopende keten van Team → ART → Solution Train → Portfolio → Enterprise als één geïntegreerd besturingsmodel. De kracht van SAFe zit dus niet alleen in integratie, maar ook in de originele schaalconcepten die het heeft toegevoegd. SAFe nam de beste ideeën van de markt, voegde daar eigen innovaties aan toe voor het schalen, en smeedde het samen tot een samenhangend geheel met één gemeenschappelijke taal. Dat is geen kopie — dat is systeemontwerp. Een volledig overzicht van alle geïntegreerde best practices vind je aan het eind van dit hoofdstuk. Hoe is SAFe® opgebouwd? SAFe® organiseert werk op meerdere niveaus, zodat zowel teams als het management grip houden: • Team level — Hier werken agile teams in korte iteraties aan concrete Stories en Tasks. SAFe kent twee teammodellen: SAFe Scrum en SAFe Team Kanban — aangepaste varianten van Scrum en Kanban die zijn geoptimaliseerd voor samenwerking binnen het bredere SAFe-framework. • ART level (Agile Release Train) — Meerdere teams die samen aan één waardestroom werken, gesynchroniseerd via Program Increments (PI’s) van doorgaans 8–12 weken. • Solution Train level — Voor grotere oplossingen die meerdere ART’s omvatten en solution-integratie vereisen. • Portfolio level — Hier verbindt Lean Portfolio Management (LPM) de strategie aan de uitvoering. Budgetten, Epics en guardrails worden hier beheerd. • Enterprise level — Hier worden de visie, de missie en de strategie van een onderneming geformuleerd, en indien nodig, ook Enterprise level Epics. Vijf disciplines Om business agility te bereiken, organiseert SAFe het geheel aan kennis, vaardigheden en praktijken in vijf disciplines. Elke discipline richt zich op een specifiek aandachtsgebied en bevat meerdere competenties die elk een concreet bedrijfsprobleem helpen oplossen. Eerdere versies van SAFe werkten met zeven kerncompetenties (zoals Lean-Agile Leadership, Organizational Agility en Continuous Learning Culture). Sinds 2025 zijn deze geherstructureerd naar de huidige vijf disciplines — een verschuiving van abstracte competentiegebieden naar een modulaire, probleemgerichte aanpak. • Team and Technical Agility — Het fundament: hoog-performante agile teams met sterke technische praktijken die snel en betrouwbaar waarde leveren. Denk aan het opzetten van effectieve agile teams, het ontwikkelen van kwaliteitssoftware, en het continu leveren van waarde via DevOps-principes. • Product Development Flow — De stroomlijning van productontwikkeling: van strategie tot klantwaarde. Teams en ART’s organiseren rondom waarde, versnellen de productflow, benutten klantfeedback, en creëren responsieve roadmaps met geïntegreerd productdesign. • Large Solution Integration and Delivery — Voor organisaties die grote, complexe systemen bouwen met meerdere ART’s, leveranciers en specialisten. Coördinatie van grote oplossingen, lean systems engineering, en roadmapping op solution-niveau. • Lean Portfolio Management — De verbinding tussen strategie en uitvoering op portfolioniveau. Organisatie van portfolio’s, validatie van investeringskansen, enterprise-architectuur, gebalanceerd portfoliomanagement, en de transitie naar value stream funding. • Leadership and Culture — De menselijke kant: leiders die Lean-Agile principes belichamen, een cultuur van continu leren en verbeteren stimuleren, en de organisatie in staat stellen wendbaar te opereren. Hier komen de vroegere competenties Lean-Agile Leadership, Organizational Agility en</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework Continuous Learning Culture samen. Elke discipline bevat concrete competenties die steeds starten vanuit een herkenbaar bedrijfsprobleem — niet vanuit theorie, maar vanuit de dagelijkse realiteit van de organisatie. Die probleemgerichte benadering maakt het framework toegankelijker en direct toepasbaar. Dual Operating System Een belangrijk concept binnen SAFe is het Dual Operating System, geïnspireerd op het werk van John Kotter (Accelerate / XLR8). De organisatie kent twee ‘besturingssystemen’ die naast elkaar bestaan: • De lijn — De bestaande hiërarchische structuur die zorgt voor stabiliteit, compliance en dagelijkse operatie. Ontwikkelprocessen verdwijnen hier. • Het Value Stream Network — Een dynamisch netwerk van ART’s en Solution Trains dat zorgt voor snelheid, innovatie en waardecreatie. Die feitelijk alle development management processen executeert die voorheen door de lijn werden uitgevoerd. Beide systemen zijn nodig. De lijn biedt structuur; het netwerk biedt wendbaarheid. SAFe helpt ze naast elkaar te laten functioneren zonder dat ze elkaar in de weg zitten. Ontdek zelf SAFe — in 7 korte video’s Theorie lezen is één ding. Het zien en horen is een ander. Hieronder vind je een zorgvuldig samengestelde verzameling korte leerzame video’s die je stap voor stap meenemen — van de basis tot het volledige framework. Geen droge theorie, maar visuele uitleg die blijft hangen. Neem er de tijd voor; je hebt het nodig voor alles wat volgt! 1. Waarom Agile? Waarom stappen organisaties wereldwijd over op agile manieren van werken? Deze korte video legt het uit. nn youtube.com/watch?v=WSUJfQWIPFI 2. Wat is Agile? Een heldere uitleg van de kernprincipes achter agile werken — en waarom incrementeel ontwikkelen zo krachtig is. nn youtube.com/watch?v=jppqK9UVWas 3. Wat is Scrum? Let op: Scrum is geen methode, maar een framework — een empirisch procesmodel. Het verschil is belangrijk. nn youtube.com/watch?v=MijJpMtdV9E 4. Is Scrum hetzelfde als Agile? Scrum en Agile worden vaak door elkaar gehaald, maar het is niet hetzelfde. Deze video legt het verschil helder uit. nn youtube.com/watch?v=gi4SOP2ElAw 5. SAFe integreert vier pijlers SAFe is gebouwd op vier pijlers: (1) Agile, (2) Lean, (3) Systems Thinking en (4) DevOps (inclusief DevSecOps). Deze video legt uit hoe Lean en Agile zich tot elkaar verhouden. nn youtu.be/rT1wQS3aCtI</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework 6. Het Dual Operating System SAFe kent twee besturingssystemen die naast elkaar bestaan: de traditionele lijnorganisatie en het Value Stream Network. Afgeleid van John Kotter’s boek Accelerate (XLR8). nn youtube.com/watch?v=Pc7EVXnF2aI 7. Algemene introductie van SAFe Een bredere introductievideo die het hele framework in context plaatst. nn youtube.com/watch?v=aW2m-BtCJyE Tot slot: Overzicht best practices achter SAFe® SAFe® integreert tientallen bewezen methodieken, modellen en denkwijzen. Hieronder een overzicht, gegroepeerd per domein — inclusief de grondleggers. Herken je er een paar? Dan ben je al goed op weg. Herken je ze allemaal? Dan weet je al het meeste van SAFe® — je moet het alleen nog leren toepassen op schaal. Agile & teamwerkmethoden Best Practice Grondlegger(s) Scrum (in SAFe: SAFe Scrum) Jeff Sutherland & Ken Schwaber Kanban (in SAFe: SAFe Team Kanban) Taiichi Ohno (Toyota), David J. Anderson (software) Extreme Programming (XP) Kent Beck Test-Driven Development (TDD) Kent Beck Agile Manifesto (4 waarden, 12 principes) 17 ondertekenaars (2001) Tuckman’s teamfasen Bruce Tuckman Lencioni’s vijf dysfuncties Patrick Lencioni Communities of Practice Etienne Wenger Lean & productiefundamenten Best Practice Grondlegger(s) Toyota Production System Taiichi Ohno & Shigeo Shingo Lean Manufacturing James Womack & Daniel Jones Value Stream Mapping Mike Rother & John Shook Hoshin Kanri (strategische planning) Yoji Akao Gemba („go and see”) Taiichi Ohno Plan-Do-Check-Act (PDCA) W. Edwards Deming Theory of Constraints Eliyahu Goldratt Little’s Law (wachtrijtheorie) John Little Lean Software Development Mary & Tom Poppendieck Productflow & economisch denken</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework Best Practice Grondlegger(s) Product Development Flow Donald G. Reinertsen Cost of Delay Donald G. Reinertsen Weighted Shortest Job First (WSJF) Donald G. Reinertsen / SAFe Lean Startup / Build-Measure-Learn Eric Ries Minimum Viable Product (MVP) Eric Ries / Frank Robinson Innovation Accounting Eric Ries Leiderschap & verandermanagement Best Practice Grondlegger(s) Servant Leadership Robert K. Greenleaf Kotter’s 8-stappenmodel John Kotter Dual Operating System / Accelerate (XLR8) John Kotter Leiderschapsstijlen (situationeel) Hersey & Blanchard Motivatietheorieën Maslow, Herzberg, Deci & Ryan Design & klantgerichtheid Best Practice Grondlegger(s) Design Thinking IDEO / Stanford d.school Lean UX Jeff Gothelf & Josh Seiden Customer Journeys Diverse (service design) Empathy Mapping Dave Gray (XPLANE) Jobs To Be Done Clayton Christensen Business Model Canvas Alexander Osterwalder Net Promoter Score (NPS) Fred Reichheld Design Sprints Jake Knapp (Google Ventures) DevOps & technische praktijken Best Practice Grondlegger(s) Continuous Integration Martin Fowler & Kent Beck Continuous Delivery Jez Humble & Dave Farley Infrastructure as Code DevOps-beweging Feature Toggles Martin Fowler DevSecOps DevOps/Security-community ITIL / CMDB-concepten UK Office of Government Commerce Systeemdenken & probleemanalyse</p>
+<p>MAJOR MILESTONES Het DNA van SAFe® — Oorsprong, opbouw en de kracht achter het framework Best Practice Grondlegger(s) Systems Thinking / The Fifth Discipline Peter Senge Ishikawa / Visgraatdiagram Kaoru Ishikawa Root Cause Analysis (5× Waarom) Sakichi Toyoda / Toyota OODA Loop John Boyd SWOT / TOCOWS-analyse Albert Humphrey Strategie & portfoliomanagement Best Practice Grondlegger(s) OKR’s Andy Grove (Intel), John Doerr Set-Based Design (SBD) Allen Ward (Toyota) Model-Based Systems Engineering (MBSE) INCOSE Portfolio Management Diverse (PMI, MoP, P3O) Kwaliteit & governance Best Practice Grondlegger(s) Kwaliteitsmanagementsystemen (QMS) ISO / Diverse Agile contractvormen Diverse (Agile community) PMO-principes PMI / Diverse Compliance & Regulatory frameworks ISO, CMMI, COBIT Dit overzicht maakt één ding duidelijk: SAFe staat op de schouders van tientallen jaren aan kennis en ervaring. Elk onderdeel van het framework heeft wortels in bewezen methodieken — van Toyota’s productielijnen tot de agile manifesto-ondertekenaars in Snowbird. Wie deze bouwstenen herkent, begrijpt niet alleen wat SAFe voorschrijft, maar ook waarom. En dat is precies het fundament dat je nodig hebt voor de rest van dit boek. In de volgende hoofdstukken vertalen we dit DNA naar concrete ontwerpbeslissingen, governance-modellen en tooling — van theorie naar de werkvloer. — einde hoofdstuk — Major Milestones B.V. — majormilestones.nl 7 Maart 2026</p>
+        </section>
+
+        <!-- H05 -->
+        <section id="h05" class="book-chapter">
+            <div class="chapter-header">
+                <div class="chapter-num">Hoofdstuk 5 &nbsp;·&nbsp; Deel I — Introductie</div>
+                <h2 class="chapter-title">Het SAFe®-jargon ontcijferd</h2>
+                <p class="chapter-sub">30 woordjes om presentaties en workshops beter te begrijpen</p>
+                <div class="chapter-accent"></div>
+                <div class="chapter-meta">20 augustus 2025 &nbsp;·&nbsp; Roel Peels</div>
+            </div>
+            <p>SAFe® Transformaties — Van Strategie naar Executie Het SAFe-jargon ontcijferd 30 woordjes om presentaties en workshops beter te begrijpen 20 augustus 2025 Roel Peels ing. R.P. Peels • Certified SAFe® Implementatie Consultant & Authorised Trainer</p>
+<p>Het SAFe-jargon ontcijferd: 30 woordjes om presentaties en workshops beter te begrijpen SAFe® versie 6.0 — basiswoorden en afkortingen die je snel moet kennen 20 augustus 2025 · Roel Peels, Major Milestones B.V. Veel mensen vinden SAFe® ingewikkeld. Dat komt vaak omdat SAFe®, net als grote bedrijven als ASML, de Belastingdienst, UWV, Vodafone en NS, een eigen jargon heeft. Wie dat jargon niet beheerst, kan de gesprekspartners niet goed verstaan. Bekend? Goed nieuws: je hoeft niet álle SAFe® woorden te kennen. Als je deze 30 belangrijkste woorden kent, begrijp je 80% van wat er in een SAFe®-presentatie of gesprek gezegd wordt. In deze post geef ik een overzicht van de SAFe® versie 6.0 basiswoorden en afkortingen die je bij de SAFe® implementatie snel moet leren kennen. Dit is het formele SAFe®-jargon dat SAFe® experts 1 op 1 gebruiken. Dit is SAFe® — met de beroemde SAFe® poster Alle woorden kun je ook terugvinden op de SAFe® poster, versie V6.0. De poster geeft een visueel overzicht van het volledige framework — van portfolio-niveau tot aan de individuele Agile teams. Eerst wat algemene basisbegrippen die je moet kennen Lean = Lean is een managementfilosofie en methode die gericht is op het maximaliseren van waarde voor de klant door het minimaliseren van verspilling in processen (Lean Six Sigma, BlackBelt, etc). Agile Manifesto = het korte document uit 2001 waarin de 17 grondleggers van Agile hebben vastgelegd waar Agile denken en werken om draait. Agile = wendbaar werken in korte stappen met feedback. Agile is a mindset. Scrum = een manier van werken waarbij kleine teams in korte sprints van 2 tot 4 weken steeds een stukje werkende software of product opleveren, met vaste rollen (Scrum Master, Product Owner, Team) en events (dagstart, sprintplanning, review, retrospective). Dev(Sec)Ops = bouwen en beheren samen: you build it, you run it. Ingebouwde security vanaf dag 1. Teams onderhouden en beheren bij voorkeur (dus niet altijd) Solutions. SAFe® = SAFe® wordt ingezet om grote (!) enterprise agile te maken ('Enterprise Business Agility'). SAFe® staat voor Scaled Agile Framework voor Enterprises. Het is een raamwerk ('Framework') dat wordt gebruikt om agile werkwijzen op te schalen binnen grotere organisaties, waarbij meerdere teams samenwerken aan complexe geïntegreerde oplossingen. Het helpt bedrijven om flexibel en efficiënt te werken, terwijl ze de uitdagingen van schaal en complexiteit aangaan. SAFe® is gebaseerd op Lean, Agile en DevOps principes. Portfolio SAFe® — strategie & besturing</p>
+<p>Lean Portfolio Management (LPM) – het hoogste orgaan en level in SAFe®, zie poster, het niveau dat beslist waar de organisatie tijd en geld in steekt. Hier worden de prioriteiten bepaald en 'de Epics gedefinieerd'. Lean Portfolio Leadership - de leiders en beslissers op het hoogste SAFe® level die strategie koppelen aan uitvoering (Business Owners, EA's, Epic Owners). Epic – een groot initiatief (meerdere kwartalen werk, meerdere teams). Alhoewel een Epic geen Project is in SAFe®, mag je dat wel zo even onthouden. Een Epic is klaar als alle Features in die Epic klaar zijn. Portfolio Backlog – de lijst met alle Epics. Value Stream – de keten van idee tot levering van waarde. Business Owner (BO) – vertegenwoordiger van de Business (Opco's), die de waardecreatie bewaakt. Epic Owner (EO) = De Epic Owner begeleidt een epic door de voorbereidende fases van Epic en bij implementatie door de organisatie. Enterprise Architect (EA) = eigenaar van de technische koers (hoe zorgen we dat alles past in het grotere geheel en duurzaam blijft). LACE (Lean-Agile Center of Excellence) - team dat de SAFe®-transformatie drijft (trainen, coachen, cultuur). Strategisch. VMO (Value Management Office) - Coördineert ART's, haalt Metrics op, etc. Alle mensen die nodig zijn om de implementatie van LPM te ondersteunen. Tactisch operationeel. Agile Release Train (ART) Agile Release Train (ART) – 50–125 mensen die samen hetzelfde product maken. Een ART is 'a team of agile teams'. Release Train Engineer (RTE) – de conducteur van de trein; zorgt dat alles loopt. De RTE is ook wel 'de master of Scrum Masters' genoemd. De RTE implementeert de ontwerpen van de LACE en begeleidt en faciliteert zijn Agile Release Train (ART) en is verantwoordelijk voor de embedding van de Agile/SAFe® Way of working binnen zijn ART (dus incl. de Agile teams). De RTE stimuleert continue verbetering bij Teams, de ART en de totale organisatie en rapporteert deze terug aan de LACE via Metrics. PM (Product Manager) - eigenaar van de ART Backlog en stuurt op Features en waarde. De PM is ook wel de Master of the PO's. De PM zorgt ervoor dat de gewenste functionaliteiten worden gebouwd en ontwikkelt goede productvisies en Product Roadmap. SA (System Architect/Engineer) – bepaalt de technische richting en architectuur van de ART. Hij zorgt ervoor dat de non-functionele requirements (NFR's) worden gehaald. System Team - ondersteunt de ART met integratie, testen en CI/CD. Feature - een middelgrote behoefte of functionaliteit die waarde levert voor de gebruiker of business. Een Feature is klaar als alle user stories in die feature klaar zijn. ART Backlog – Een overzicht van alle Features die moeten worden ontwikkeld.</p>
+<p>Agile Team (AT) Agile Team – 5–11 mensen die met elkaar in korte sprints (ook wel iteraties) waarde leveren. Tegelijk ontwikkeling en beheer doen, dus DevOps. Scrum Master (SM) – coach voor het team. Daarvan is er altijd maar 1. Product Owner (PO) – bepaalt wat het team bouwt en maximaliseert de op te leveren waarde per iteratie. Daarvan is er altijd maar 1. Dev-team member - lid van een Agile Team (ontwikkelaar, tester, UX'er, analist, etc.) die samen met andere dev team members verantwoordelijk is voor ontwerpen, bouwen, testen en opleveren van werkende software of systemen. User Story – klein stukje werk dat in een Iteration past. Tot slot Iteration (bij Scrum heet dat een Sprint) – In theorie een periode van 2 weken. PI (Plannings Interval) – periode van 8–12 weken waarin de ART plant en levert. In 1 PI zitten 5 tot 6 iteraties. PI Planning – gezamenlijke 2-daagse planningsdag(en) van alle teams binnen 1 ART. De teams werken samen met stakeholders om het volgende increment te plannen. Wanneer je 10 ART's hebt, zijn er 10 PI Planningen die allemaal parallel lopen. Inspect & Adapt (I&A) - Aan het einde van elke plannings interval (PI) is er een groot 'inspect' event om samen terug te kijken op de afgelopen PI, problemen te analyseren en verbeteringen af te spreken. In dit event worden de metrics besproken, de performance van de ART. Samenvatting Ken je deze woorden, dan kun je de meeste SAFe® gesprekken en presentaties bij je eigen organisatie volgen. Je zult merken dat het jargon snel vertrouwd gaat voelen. Dus wees niet ongerust, alles komt goed met je gedurende een complexe SAFe® transformatie! — einde — Major Milestones B.V. — majormilestones.nl 20 augustus 2025 3</p>
+        </section>
+
+        <!-- MEER HOOFDSTUKKEN -->
+        <section id="meer" class="more-chapters">
+            <h3>Dit boek telt meer dan 70 artikelen</h3>
+            <p>Je hebt de introductie gelezen. Het volledige boek omvat meerdere delen over SAFe® implementatie, leiderschap, cultuur en praktijkcases uit de echte wereld.</p>
+            <a href="index.html#contact" class="btn-lime">Vraag een exemplaar aan</a>
+        </section>
+
+    </main>
+</div>
+
+<script>
+// Reading progress bar
+window.addEventListener('scroll', function() {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop;
+    const total = doc.scrollHeight - doc.clientHeight;
+    document.getElementById('progress-bar').style.width = (scrolled / total * 100) + '%';
+});
+
+// Active TOC item
+const sections = document.querySelectorAll('section[id]');
+const tocLinks = document.querySelectorAll('.toc a');
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            tocLinks.forEach(a => a.classList.remove('active'));
+            const active = document.querySelector('.toc a[href="#' + e.target.id + '"]');
+            if (active) active.classList.add('active');
+        }
+    });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
