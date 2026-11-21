@@ -42,7 +42,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
       <span class="txt">Inhoud</span>
     </button>
-    <a class="btn btn-primary" id="dl" href="boek.pdf" download>
+    <a class="btn btn-primary" id="dl" href="boek.pdf" download data-goatcounter-click="download-pdf-boekpagina" data-goatcounter-title="Download PDF (boekpagina)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
       <span class="txt">Download PDF</span>
     </a>
@@ -99,12 +99,14 @@
   <div class="bar"><i id="l-bar"></i></div>
   <p id="load-msg">Het boek wordt geopend…</p>
   <div class="err"><p id="err-msg">Het boek kon niet worden geopend.</p>
-    <a class="btn btn-primary" id="err-dl" href="boek.pdf" download>Download de PDF</a></div>
+    <a class="btn btn-primary" id="err-dl" href="boek.pdf" download data-goatcounter-click="download-pdf-foutmelding" data-goatcounter-title="Download PDF (na laadfout)">Download de PDF</a></div>
 </div>
 
 <noscript><div class="noscript">Voor het bladeren is JavaScript nodig. <a href="boek.pdf" download>Download de PDF</a>.</div></noscript>
 
 <script src="lib/page-flip/page-flip.browser.js"></script>
 <script type="module" src="viewer.js"></script>
+<!-- Bezoekersstatistieken: GoatCounter (zonder cookies) -->
+<script data-goatcounter="https://majormilestones.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
